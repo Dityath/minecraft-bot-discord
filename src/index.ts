@@ -18,13 +18,52 @@ const client = new Client({
 
 client.once('ready', () => {
   console.log(`Logged in as ${client.user?.tag}`);
+  console.log('✅ Starting server monitor...');
+
+  // Start monitoring
+  setInterval(pollServerStatus, 5000);
 });
 
+// Flapping protection setup
+let lastKnownState: 'up' | 'down' | null = null;
+let lastConfirmedState: 'up' | 'down' | null = null;
+let stableCounter = 0;
+const STABILITY_THRESHOLD = 2;
+
+const ip = process.env.MINECRAFT_SERVER_IP || '';
+const port = Number(process.env.MINECRAFT_SERVER_PORT || 0);
+
+// Polling function
+async function pollServerStatus() {
+  try {
+    const result = await checkConnection(ip, port);
+    const currentState: 'up' | 'down' = result.online ? 'up' : 'down';
+
+    if (currentState === lastKnownState) {
+      stableCounter++;
+    } else {
+      stableCounter = 1;
+      lastKnownState = currentState;
+    }
+
+    if (currentState !== lastConfirmedState && stableCounter >= STABILITY_THRESHOLD) {
+      lastConfirmedState = currentState;
+
+      const message = currentState === 'up'
+        ? '🟢 Minecraft server is now **online**!\n'
+        : '🔴 Minecraft server is now **offline**!\n';
+
+      await sendStatusMessage(message, client);
+      console.log(`[Monitor] Server confirmed ${currentState}`);
+    }
+  } catch (err) {
+    console.error('Error polling server status:', err);
+  }
+}
+
+// Slash commands
 client.on('interactionCreate', async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
-
-  const ip = process.env.MINECRAFT_SERVER_IP || '';
-  const port = Number(process.env.MINECRAFT_SERVER_PORT || 0);
 
   if (interaction.commandName === 'nyalakah') {
     const result = await checkConnection(ip, port);
@@ -80,6 +119,7 @@ client.on('interactionCreate', async (interaction) => {
   }
 });
 
+// Status HTTP endpoint
 app.post('/status/:state', (async (req: Request, res: Response) => {
   const { state } = req.params;
   const authHeader = req.headers.authorization;
