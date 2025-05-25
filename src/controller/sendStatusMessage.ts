@@ -8,13 +8,13 @@ async function sendStatusMessage(message: string, client: any): Promise<void> {
   }
 
 let channel: TextChannel | undefined = guild.channels.cache.find(
-    (c: { name: string; isTextBased: () => any; }): c is TextChannel => c.name === 'minecraft' && c.isTextBased()
+    (c: { name: string; isTextBased: () => any; }): c is TextChannel => c.name === 'bot-minecraft' && c.isTextBased()
 );
 
   if (!channel) {
     try {
       channel = (await guild.channels.create({
-        name: 'minecraft',
+        name: 'bot-minecraft',
         reason: 'Used for Minecraft server status updates',
       })) as TextChannel;
     } catch (err) {
