@@ -2,6 +2,7 @@ import express, { Request, RequestHandler, Response } from 'express';
 import { Client, GatewayIntentBits } from 'discord.js';
 import dotenv from 'dotenv';
 import checkConnection from './controller/checkConnection';
+import checkServer from './controller/checkServer';
 import sendStatusMessage from './controller/sendStatusMessage';
 
 dotenv.config();
@@ -116,6 +117,52 @@ client.on('interactionCreate', async (interaction) => {
       `🔀 SRV Record: ${srv}\n` +
       `⏱️ Data diambil pada: ${retrieved}`
     );
+  }
+
+  if (interaction.commandName === 'detailserver') {
+    const token = process.env.STATUS_SERVER_TOKEN;
+    if (!token) {
+      return interaction.reply('❌ Token server tidak tersedia di konfigurasi.');
+    }
+
+    const result = await checkServer(token);
+    if (!result) {
+      return interaction.reply('🔴 Gagal mengambil info server 😔');
+    }
+
+    const {
+      server_status,
+      server_uptime,
+      server_data,
+      data,
+      network,
+    } = result;
+
+    const temps = data.temps;
+    const interfaces = network.interfaces.map((i) => `• ${i.name}: ${i.ip}`).join('\n');
+
+    const reply = `📡 **Detail Server Status**\n\n` +
+      `🟢 Status: **${server_status}**\n` +
+      `⏱️ Uptime: ${server_uptime}\n\n` +
+      `💻 **Server Info**\n` +
+      `• Nama: ${server_data.server_name}\n` +
+      `• CPU: ${server_data.server_cpu}\n` +
+      `• OS: ${server_data.server_os}\n\n` +
+      `📈 **Resource Usage**\n` +
+      `• CPU: ${data.cpu_percentage.toFixed(1)}%\n` +
+      `• Memori: ${data.memory.toFixed(2)} GB / ${data.total_memory.toFixed(2)} GB (${data.memory_percentage.toFixed(1)}%)\n\n` +
+      `🌡️ **Temperatur**\n` +
+      `• Motherboard: ${temps.motherboard_temp}°C\n` +
+      `• CPU: ${temps.cpu_temp}°C\n` +
+      `• GPU: ${temps.gpu_temp}°C\n\n` +
+      `🌍 **Jaringan**\n` +
+      // `• Public IP: ${network.public_ip}\n` +
+      `• Ping: ${network.ping_ms} ms\n` +
+      `• Download: ${network.speed_download_mbps} Mbps\n` +
+      `• Upload: ${network.speed_upload_mbps} Mbps\n` +
+      `• Interface:\n${interfaces}`;
+
+    await interaction.reply(reply);
   }
 });
 
