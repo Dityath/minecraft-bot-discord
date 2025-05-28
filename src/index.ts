@@ -157,7 +157,7 @@ client.on('interactionCreate', async (interaction) => {
       `• CPU: ${temps.cpu_temp}°C\n` +
       `• GPU: ${temps.gpu_temp}°C\n\n` +
       `🌍 **Jaringan**\n` +
-      `• Public IP: ${network.public_ip}\n` +
+      // `• Public IP: ${network.public_ip}\n` +
       `• Ping: ${network.ping_ms} ms\n` +
       `• Download: ${network.speed_download_mbps} Mbps\n` +
       `• Upload: ${network.speed_upload_mbps} Mbps\n` +
