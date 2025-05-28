@@ -121,13 +121,14 @@ client.on('interactionCreate', async (interaction) => {
 
   if (interaction.commandName === 'detailserver') {
     const token = process.env.STATUS_SERVER_TOKEN;
-    if (!token) {
-      return interaction.reply('❌ Token server tidak tersedia di konfigurasi.');
-    }
+    if (!token) return interaction.reply('❌ Token server tidak tersedia di konfigurasi.');
+
+    await interaction.deferReply();
 
     const result = await checkServer(token);
+
     if (!result) {
-      return interaction.reply('🔴 Gagal mengambil info server 😔');
+      return interaction.editReply('🔴 Gagal mengambil info server 😔');
     }
 
     const {
@@ -156,13 +157,13 @@ client.on('interactionCreate', async (interaction) => {
       `• CPU: ${temps.cpu_temp}°C\n` +
       `• GPU: ${temps.gpu_temp}°C\n\n` +
       `🌍 **Jaringan**\n` +
-      // `• Public IP: ${network.public_ip}\n` +
+      `• Public IP: ${network.public_ip}\n` +
       `• Ping: ${network.ping_ms} ms\n` +
       `• Download: ${network.speed_download_mbps} Mbps\n` +
       `• Upload: ${network.speed_upload_mbps} Mbps\n` +
       `• Interface:\n${interfaces}`;
 
-    await interaction.reply(reply);
+    await interaction.editReply(reply); 
   }
 });
 
